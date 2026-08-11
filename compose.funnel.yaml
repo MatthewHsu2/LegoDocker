@@ -1,0 +1,21 @@
+# Funnel overlay — Metabase reached from the public internet through Tailscale Funnel.
+#
+# Layer this AFTER compose.lan.yaml. The LAN overlay publishes port 3000; Funnel proxies to
+# that same port on loopback. This file changes nothing about the network — it only corrects
+# the address Metabase writes into the links it generates.
+#
+#   docker compose -f compose.yaml -f compose.lan.yaml -f compose.funnel.yaml up -d
+#
+# Tailscale terminates TLS at its edge and forwards plain HTTP to 127.0.0.1:3000, so the
+# container keeps speaking HTTP. Do not add a certificate here.
+#
+# Funnel serves the whole application, not selected questions. Nothing authenticates in front
+# of it, so the Metabase login page is reachable by anyone. Keep the image tag current.
+
+services:
+  metabase:
+    environment:
+      # Metabase builds email, alert, and public-share links from this value. It must be the
+      # address the viewer types, not the address the container listens on. Without this the
+      # LAN overlay's http://<lan-ip>:3000 leaks into mail that outside viewers cannot open.
+      MB_SITE_URL: ${PUBLIC_URL:?set PUBLIC_URL in the root .env, e.g. https://host.tailnet.ts.net}
