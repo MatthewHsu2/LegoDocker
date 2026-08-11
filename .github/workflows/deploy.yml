@@ -16,28 +16,31 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # The overlay the laptop runs. Change this one line when the ingress decision lands:
-  #   LAN (now):            -f compose.yaml -f compose.lan.yaml
-  #   Publicly reachable:   -f compose.yaml          (and add --profile public below)
-  COMPOSE_ARGS: -f compose.yaml -f compose.lan.yaml
+  # The overlays the host runs, in order — later files win.
+  #   compose.lan.yaml     publishes port 3000 on the host
+  #   compose.funnel.yaml  points MB_SITE_URL at the public Tailscale Funnel address
+  # Drop compose.funnel.yaml to go back to LAN-only. Swap both for `--profile public` if the
+  # host ever becomes publicly reachable and Caddy takes over ingress.
+  COMPOSE_ARGS: -f compose.yaml -f compose.lan.yaml -f compose.funnel.yaml
 
-  # Where the laptop keeps its .env files. They live OUTSIDE the workspace on purpose:
+  # Where the host keeps its .env files. They live OUTSIDE the workspace on purpose:
   # actions/checkout runs `git clean -ffdx`, which deletes untracked files, and the .env
   # files are git-ignored. Kept in the workspace, every deploy would wipe the secrets.
-  # Forward slashes — the job shell is bash, which does not read `\` as a path separator.
-  SECRETS_DIR: C:/LegoDocker/secrets
+  SECRETS_DIR: /home/it/legodocker-secrets
 
 jobs:
   deploy:
-    # `self-hosted` targets the runner installed on the laptop. A GitHub-hosted runner cannot
-    # reach the laptop at all, so this label is what makes push-triggered deployment possible.
+    # `self-hosted` targets the runner installed on the host. A GitHub-hosted runner cannot
+    # reach it at all, so this label is what makes push-triggered deployment possible.
     # `legodocker` narrows it to this specific machine if more runners join the org later.
+    #
+    # The runner MUST be installed inside the WSL2 Ubuntu distro, not as a Windows service.
+    # Docker CE runs inside WSL2 and its socket does not exist on the Windows side, so a
+    # Windows runner would fail every `docker` step.
     runs-on: [self-hosted, legodocker]
 
     defaults:
       run:
-        # Git for Windows ships bash. Pinning it keeps this file identical whether the runner
-        # is the Windows service or a Linux runner inside WSL2.
         shell: bash
 
     steps:
@@ -47,7 +50,7 @@ jobs:
       - name: Restore the .env files
         run: |
           if [ ! -d "$SECRETS_DIR" ]; then
-            echo "::error::secrets directory $SECRETS_DIR not found — see README, Windows laptop setup"
+            echo "::error::secrets directory $SECRETS_DIR not found — see docs/operations.md, Secrets"
             exit 1
           fi
           cp "$SECRETS_DIR/root.env"     .env
