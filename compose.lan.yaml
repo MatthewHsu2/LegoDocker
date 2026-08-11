@@ -1,0 +1,27 @@
+# LAN overlay — the interim ingress while the public path is undecided.
+#
+# The Caddy lego is off by default because Let's Encrypt cannot issue a certificate to a host
+# that the public internet cannot reach (see caddy/compose.yaml). Until a tunnel or a publicly
+# reachable host exists, publish the services straight onto the office network over plain HTTP.
+#
+#   docker compose -f compose.yaml -f compose.lan.yaml up -d
+#
+# Plain HTTP means passwords cross the LAN unencrypted. Treat this as a staging step, not the
+# finished deployment.
+
+services:
+  metabase:
+    environment:
+      # Metabase builds the links in emails, alerts and subscriptions from this value. The
+      # public hostname does not resolve in LAN mode, so those links would all be dead.
+      # Set LAN_HOST in the root .env to the laptop's fixed LAN IP.
+      MB_SITE_URL: http://${LAN_HOST:-localhost}:3000
+    ports:
+      - "3000:3000"
+
+  portainer:
+    # Loopback only. Portainer mounts the Docker socket, which is root on the host, and there
+    # is no authentication gateway in front of it. Reach it from another machine over an SSH
+    # tunnel:  ssh -L 9000:localhost:9000 <user>@<laptop>
+    ports:
+      - "127.0.0.1:9000:9000"

@@ -1,0 +1,23 @@
+# Portainer lego: the Docker management UI.
+# Reached at portainer.${DOMAIN}.
+
+services:
+  portainer:
+    image: portainer/portainer-ce:2.21.4
+    container_name: portainer
+    restart: unless-stopped
+    volumes:
+      - portainer-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - edge
+    logging:
+      driver: local
+
+volumes:
+  portainer-data:
+
+networks:
+  edge:
+    name: edge
+    external: true

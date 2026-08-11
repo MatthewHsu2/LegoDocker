@@ -1,0 +1,83 @@
+name: Deploy LegoDocker
+
+# What a push actually changes here is Compose files and shell scripts, not application code.
+# So the deploy is: get the new files onto the laptop, then reconcile the running containers
+# against them. Nothing is built or published to a registry.
+on:
+  push:
+    branches: [main]
+  # Adds a "Run workflow" button in the Actions tab, for a redeploy without a commit.
+  workflow_dispatch:
+
+concurrency:
+  # Two deploys at once fight over the same containers and leave the stack half-updated.
+  # Queue them instead of cancelling: a cancelled deploy stops midway through `up -d`.
+  group: legodocker-deploy
+  cancel-in-progress: false
+
+env:
+  # The overlay the laptop runs. Change this one line when the ingress decision lands:
+  #   LAN (now):            -f compose.yaml -f compose.lan.yaml
+  #   Publicly reachable:   -f compose.yaml          (and add --profile public below)
+  COMPOSE_ARGS: -f compose.yaml -f compose.lan.yaml
+
+  # Where the laptop keeps its .env files. They live OUTSIDE the workspace on purpose:
+  # actions/checkout runs `git clean -ffdx`, which deletes untracked files, and the .env
+  # files are git-ignored. Kept in the workspace, every deploy would wipe the secrets.
+  # Forward slashes — the job shell is bash, which does not read `\` as a path separator.
+  SECRETS_DIR: C:/LegoDocker/secrets
+
+jobs:
+  deploy:
+    # `self-hosted` targets the runner installed on the laptop. A GitHub-hosted runner cannot
+    # reach the laptop at all, so this label is what makes push-triggered deployment possible.
+    # `legodocker` narrows it to this specific machine if more runners join the org later.
+    runs-on: [self-hosted, legodocker]
+
+    defaults:
+      run:
+        # Git for Windows ships bash. Pinning it keeps this file identical whether the runner
+        # is the Windows service or a Linux runner inside WSL2.
+        shell: bash
+
+    steps:
+      - name: Check out the pushed commit
+        uses: actions/checkout@v4
+
+      - name: Restore the .env files
+        run: |
+          if [ ! -d "$SECRETS_DIR" ]; then
+            echo "::error::secrets directory $SECRETS_DIR not found — see README, Windows laptop setup"
+            exit 1
+          fi
+          cp "$SECRETS_DIR/root.env"     .env
+          cp "$SECRETS_DIR/metabase.env" metabase/.env
+
+      - name: Validate the Compose config
+        # Runs before anything touches the running stack. A typo or an unset variable fails
+        # the job here, and the previous deploy keeps serving.
+        run: docker compose $COMPOSE_ARGS config --quiet
+
+      - name: Apply
+        # --build          the metabase-backup image is built locally; without this a change
+        #                  to backup.sh or its Dockerfile is never picked up.
+        # --remove-orphans deletes containers for legos removed from the include list.
+        run: docker compose $COMPOSE_ARGS up -d --build --remove-orphans
+
+      - name: Wait for Metabase to report healthy
+        # A deploy is not finished when `up -d` returns — that only means the container
+        # started. Metabase runs schema migrations on boot and can fail minutes later.
+        run: |
+          for attempt in $(seq 1 30); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' metabase 2>/dev/null || echo missing)
+            echo "attempt ${attempt}/30: ${status}"
+            if [ "$status" = "healthy" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "::error::metabase did not reach healthy within 5 minutes"
+          docker compose $COMPOSE_ARGS logs --tail 100 metabase
+          exit 1
+
+      - name: Report what is running
+        if: always()
+        run: docker compose $COMPOSE_ARGS ps

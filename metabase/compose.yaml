@@ -1,0 +1,103 @@
+# Metabase lego: the Metabase app, its dedicated Postgres metadata DB, and a nightly
+# pg_dump backup that also uploads offsite to Azure Blob.
+#
+# IMPORTANT: Metabase's own metadata store MUST be Postgres (never the embedded H2 —
+# H2 loses data on restart/migration). SQL Server (SpiritWebDB) is NOT usable as the
+# metadata DB; it is added later as a *data source* inside the Metabase UI.
+
+services:
+  metabase-db:
+    # Pinned — the same major.minor is used by the backup image so pg_dump matches the server.
+    image: postgres:16.4
+    container_name: metabase-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${MB_DB_DBNAME}
+      POSTGRES_USER: ${MB_DB_USER}
+      POSTGRES_PASSWORD: ${MB_DB_PASS}
+      TZ: ${TZ}
+    volumes:
+      - metabase-pgdata:/var/lib/postgresql/data
+    networks:
+      - metabase-internal
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${MB_DB_USER} -d ${MB_DB_DBNAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: local
+
+  metabase:
+    image: metabase/metabase:v0.63.1
+    container_name: metabase
+    restart: unless-stopped
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_HOST: metabase-db
+      MB_DB_PORT: 5432
+      MB_DB_DBNAME: ${MB_DB_DBNAME}
+      MB_DB_USER: ${MB_DB_USER}
+      MB_DB_PASS: ${MB_DB_PASS}
+      MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
+      MB_SITE_URL: https://metabase.${DOMAIN}
+      JAVA_OPTS: -Xmx${MB_JAVA_XMX:-2g}
+      JAVA_TIMEZONE: ${TZ}
+      TZ: ${TZ}
+    # No `/dev/urandom:/dev/random` mount. The Metabase docs suggest it to work around
+    # entropy starvation on old Linux kernels; kernels 5.6+ never block on /dev/random, and
+    # on Docker Desktop for Windows that host path does not exist. Do not re-add it.
+    networks:
+      - metabase-internal
+      - edge
+    depends_on:
+      metabase-db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: ${MB_MEM_LIMIT:-3g}
+    healthcheck:
+      test: [ "CMD", "curl", "-sf", "http://localhost:3000/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    logging:
+      driver: local
+
+  metabase-backup:
+    build:
+      context: ./backup
+    image: metabase-backup:local
+    container_name: metabase-backup
+    restart: unless-stopped
+    environment:
+      MB_DB_DBNAME: ${MB_DB_DBNAME}
+      MB_DB_USER: ${MB_DB_USER}
+      MB_DB_PASS: ${MB_DB_PASS}
+      AZURE_BLOB_SAS_URL: ${AZURE_BLOB_SAS_URL}
+      RETENTION_DAYS: ${RETENTION_DAYS:-14}
+      BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
+      TZ: ${TZ}
+    volumes:
+      - metabase-backups:/backups
+    networks:
+      - metabase-internal
+      - edge
+    depends_on:
+      metabase-db:
+        condition: service_healthy
+    logging:
+      driver: local
+
+volumes:
+  metabase-pgdata:
+  metabase-backups:
+
+networks:
+  edge:
+    name: edge
+    external: true
+  metabase-internal:
+    internal: true

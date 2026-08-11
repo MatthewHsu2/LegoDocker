@@ -1,0 +1,21 @@
+# Root compose — wires the legos together and declares the shared `edge` network.
+#
+# Requires Docker Compose v2.20+ (for `include:`).
+# Run from this directory:  docker compose up -d
+
+# Pinned so the container and volume names never depend on the folder the stack is run from.
+# The CI runner checks out to its own workspace path, and without this the deploy would
+# create a second, empty set of volumes instead of updating the running stack.
+name: legodocker
+
+include:
+  - metabase/compose.yaml
+  - portainer/compose.yaml
+  - caddy/compose.yaml
+
+networks:
+  # Shared flat network every lego joins so services reach each other by container name.
+  # Created once, out of band:  docker network create edge
+  edge:
+    name: edge
+    external: true

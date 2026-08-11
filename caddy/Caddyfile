@@ -1,0 +1,11 @@
+# {$DOMAIN} is injected from the stack .env (the same value Metabase uses for MB_SITE_URL),
+# so the hostname and Metabase's site URL can never drift apart.
+#
+# Add a lego to the public edge = add another block:
+#   <name>.{$DOMAIN} {
+#       reverse_proxy <container>:<port>
+#   }
+
+metabase.{$DOMAIN} {
+	reverse_proxy metabase:3000
+}

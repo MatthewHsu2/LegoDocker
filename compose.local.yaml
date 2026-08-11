@@ -1,0 +1,5 @@
+# Local-testing overlay — NOT auto-loaded, NOT used in production.
+services:
+  metabase:
+    ports:
+      - "127.0.0.1:3000:3000"

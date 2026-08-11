@@ -1,0 +1,39 @@
+# Caddy lego: the public ingress for the stack.
+#
+# OFF BY DEFAULT (see `profiles` below). Caddy gets its certificate through the Let's Encrypt
+# HTTP-01 challenge, which needs the public internet to reach port 80 on this host. That holds
+# for a VM with a public IP. It does not hold for a laptop behind NAT on a dynamic address:
+# issuance fails and Caddy retries forever. Start it only on a host that is publicly reachable:
+#
+#   docker compose --profile public up -d
+
+services:
+  caddy:
+    image: caddy:2.8
+    container_name: caddy
+    restart: unless-stopped
+    profiles:
+      - public
+    ports:
+      - "80:80" # HTTP-01 ACME challenge + http->https redirect
+      - "443:443" # TLS
+    environment:
+      # Substituted into the Caddyfile as {$DOMAIN}. Sourced from the stack .env.
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - edge
+    logging:
+      driver: local
+
+volumes:
+  caddy-data:
+  caddy-config:
+
+networks:
+  edge:
+    name: edge
+    external: true

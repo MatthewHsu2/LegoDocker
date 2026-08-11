@@ -1,0 +1,11 @@
+# Docker runs these files on Linux, whatever the host is.
+#
+# Without an explicit `eol=lf`, a Windows checkout writes CRLF. The kernel then reads the
+# shebang as `/bin/bash\r` and the container dies with "no such file or directory" — a
+# failure that gives no hint about line endings. Pin LF on every file a container reads.
+*.sh          text eol=lf
+Dockerfile    text eol=lf
+Caddyfile     text eol=lf
+*.yaml        text eol=lf
+*.yml         text eol=lf
+.env.example  text eol=lf

@@ -1,0 +1,7 @@
+**/.env
+.env
+
+# Cloudflare Tunnel credentials (the tunnel's private key JSON).
+cloudflared/creds/*
+!cloudflared/creds/.gitkeep
+**/*.creds.json
