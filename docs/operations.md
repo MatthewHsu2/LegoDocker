@@ -65,7 +65,7 @@ Two smaller notes:
 
 ## Ingress
 
-**Public access uses Tailscale Funnel** at `https://metabase.tail3b6298.ts.net`. Tailscale runs
+**Public access uses Tailscale Funnel** at `https://metabase.tailfcfc4a.ts.net`. Tailscale runs
 inside the WSL2 distro, dials outbound, and terminates TLS at its edge with a Let's Encrypt
 certificate. No inbound port, no static IP, and a DHCP change cannot break it.
 
