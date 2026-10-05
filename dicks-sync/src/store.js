@@ -40,36 +40,34 @@ function insert(tx, week, row, isRefill, sourceFile) {
     .query(INSERT);
 }
 
-// Write rules from the spec: replace week W in full; fill W-7/-14/-21 with units only, and only
-// when that week has no rows at all.
-async function writeWeek(env, parsed, sourceFile) {
+// Units-only rows go in only for a week that has no rows at all, so they never overwrite a
+// week loaded in full.
+async function refillEmptyWeeks(tx, refills, sourceFile) {
+  const byWeek = new Map();
+  for (const r of refills) {
+    if (!byWeek.has(r.weekEnding)) byWeek.set(r.weekEnding, []);
+    byWeek.get(r.weekEnding).push(r);
+  }
+  const refilledWeeks = [];
+  for (const [week, rows] of byWeek) {
+    const result = await new sql.Request(tx)
+      .input('week', sql.Date, asDate(week))
+      .query('SELECT COUNT(*) AS n FROM ext.DicksSellThrough WHERE WeekEnding = @week');
+    if (result.recordset[0].n > 0) continue;
+    for (const row of rows) await insert(tx, week, row, true, sourceFile);
+    refilledWeeks.push(week);
+  }
+  return refilledWeeks;
+}
+
+async function inTransaction(env, work) {
   const pool = await new sql.ConnectionPool(config(env)).connect();
   const tx = new sql.Transaction(pool);
   try {
     await tx.begin(sql.ISOLATION_LEVEL.SERIALIZABLE);
-
-    await new sql.Request(tx)
-      .input('week', sql.Date, asDate(parsed.weekEnding))
-      .query('DELETE FROM ext.DicksSellThrough WHERE WeekEnding = @week');
-    for (const row of parsed.rows) await insert(tx, parsed.weekEnding, row, false, sourceFile);
-
-    const byWeek = new Map();
-    for (const r of parsed.refills) {
-      if (!byWeek.has(r.weekEnding)) byWeek.set(r.weekEnding, []);
-      byWeek.get(r.weekEnding).push(r);
-    }
-    const refilledWeeks = [];
-    for (const [week, rows] of byWeek) {
-      const result = await new sql.Request(tx)
-        .input('week', sql.Date, asDate(week))
-        .query('SELECT COUNT(*) AS n FROM ext.DicksSellThrough WHERE WeekEnding = @week');
-      if (result.recordset[0].n > 0) continue;
-      for (const row of rows) await insert(tx, week, row, true, sourceFile);
-      refilledWeeks.push(week);
-    }
-
+    const result = await work(tx);
     await tx.commit();
-    return { inserted: parsed.rows.length, refilledWeeks };
+    return result;
   } catch (err) {
     await tx.rollback().catch(() => {});
     throw err;
@@ -78,4 +76,20 @@ async function writeWeek(env, parsed, sourceFile) {
   }
 }
 
-module.exports = { writeWeek };
+// Write rules from the spec: replace week W in full, then fill W-7/-14/-21 with units only.
+function writeWeek(env, parsed, sourceFile) {
+  return inTransaction(env, async (tx) => {
+    await new sql.Request(tx)
+      .input('week', sql.Date, asDate(parsed.weekEnding))
+      .query('DELETE FROM ext.DicksSellThrough WHERE WeekEnding = @week');
+    for (const row of parsed.rows) await insert(tx, parsed.weekEnding, row, false, sourceFile);
+    const refilledWeeks = await refillEmptyWeeks(tx, parsed.refills, sourceFile);
+    return { inserted: parsed.rows.length, refilledWeeks };
+  });
+}
+
+function writeRefills(env, refills, sourceFile) {
+  return inTransaction(env, (tx) => refillEmptyWeeks(tx, refills, sourceFile));
+}
+
+module.exports = { writeWeek, writeRefills };

@@ -14,3 +14,11 @@ test('load-file reads the flag and the path in either order', () => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /ERROR: file says week ending 2026-10-03, --week-ending says 2026-09-26/);
 });
+
+test('backfill --file --dry-run reads a saved Sales Trends export and writes nothing', () => {
+  const fixture = path.join(__dirname, 'fixtures/sales-trends-2023-01-07-to-2026-10-03.csv');
+  const result = run('backfill', '--dry-run', '--file', fixture);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /196 weeks from 2023-01-07 to 2026-10-03, 7978 rows/);
+  assert.match(result.stdout, /dry run: nothing written/);
+});

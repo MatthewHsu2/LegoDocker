@@ -154,4 +154,4 @@ function parse(text, { weekEnding } = {}) {
   return { weekEnding: week, rows, refills };
 }
 
-module.exports = { decode, parse };
+module.exports = { decode, parse, splitCsvLine, parseInteger, isSaturday };

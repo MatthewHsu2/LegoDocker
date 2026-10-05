@@ -192,6 +192,17 @@ docker cp dicks-sync/test/fixtures/2026-09-26.csv dicks-sync:/data/raw/2026-09-2
 docker exec dicks-sync dicks-sync load-file /data/raw/2026-09-26.csv --week-ending 2026-09-26
 ```
 
+Fill older weeks from the Sales Trends dashboard, which has units per style per week from
+January 2023. It only fills weeks that have no data, so it never overwrites a week loaded from
+Item Performance, and it is safe to run again:
+
+```bash
+docker exec dicks-sync dicks-sync backfill --dry-run   # download and check, write nothing
+docker exec dicks-sync dicks-sync backfill
+```
+
+Backfilled weeks have units only (`IsRefill = 1`), no dollars or stock.
+
 Only one run happens at a time. A manual run while the 06:00 run is still going logs
 `ERROR: another run is still going` and does nothing.
 
