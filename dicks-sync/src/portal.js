@@ -8,12 +8,14 @@ const REPORT_URL = 'https://ca-cluster1-2021-2.analytics.app.spscommerce.com/Mic
   + '&reportID=96A1CBBA4B43CCD10A9F44A3B0307EAA&reportViewMode=1'
   + '&elementsPromptAnswers=2658181C443B8E5F7251838DFFE43896;2658181C443B8E5F7251838DFFE43896:6010';
 
-// Recorded from the live login page on 2026-10-05. Opening the report while logged out redirects
-// to https://analytics.spscommerce.com/Login, a different host from the report.
+// Recorded from the live portal on 2026-10-05. Opening the report while logged out redirects
+// to https://analytics.spscommerce.com/Login. Signing in lands on /Home, which is a different host
+// from the report: only the retailer link on /Home carries the session over to the report host.
 const LOGIN = {
   email: '#Email',
   password: '#Password',
   submit: '#btnSubmit',
+  retailerLink: 'DICKS SPORTING GOODS',
 };
 
 const fileStamp = () => `${stamp().replace(/[: ]/g, '-')}-${String(Date.now() % 1000).padStart(3, '0')}`;
@@ -37,8 +39,9 @@ async function login(page, email, password) {
   await page.locator(LOGIN.email).fill(email);
   await page.locator(LOGIN.password).fill(password);
   await page.locator(LOGIN.submit).click();
-  // A wrong password re-shows the form, so this times out instead of passing.
-  await page.locator(LOGIN.email).waitFor({ state: 'detached' });
+  // A wrong password stays on /Login, so this times out.
+  await page.waitForURL((url) => url.pathname.toLowerCase() === '/home');
+  await page.locator('a', { hasText: LOGIN.retailerLink }).filter({ visible: true }).first().click();
   await page.waitForLoadState('networkidle');
 }
 
@@ -55,7 +58,7 @@ async function download({ email, password, rawDir, failuresDir }) {
       await step(page, failuresDir, 'login failed', async () => {
         await login(page, email, password);
         await page.goto(REPORT_URL);
-        if (await onLoginPage(page)) throw new Error(`the login page came back after signing in (${page.url()})`);
+        if (await onLoginPage(page)) throw new Error('the login page came back after signing in');
       });
       log('logged in');
     }
