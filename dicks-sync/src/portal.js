@@ -75,7 +75,8 @@ async function download({ email, password, rawDir, failuresDir }) {
     // Export Options may open in a popup or in the same page; use whichever appears.
     const options = await step(page, failuresDir, 'open export options', async () => {
       const popup = page.waitForEvent('popup', { timeout: 10_000 }).catch(() => null);
-      await page.locator('text="Export" >> visible=true').first().click();
+      // The page title also reads "Export"; only the button under the prompts submits them.
+      await page.getByRole('button', { name: 'Export', exact: true }).filter({ visible: true }).first().click();
       const target = (await popup) ?? page;
       await target.locator('input[name="exportFormatGrids"][value="csvIServer"]').waitFor();
       return target;
