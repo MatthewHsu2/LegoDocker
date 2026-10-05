@@ -37,7 +37,9 @@ async function login(page, email, password) {
   await page.locator(LOGIN.email).fill(email);
   await page.locator(LOGIN.password).fill(password);
   await page.locator(LOGIN.submit).click();
-  await page.waitForURL((url) => !url.pathname.toLowerCase().startsWith('/login'));
+  // A wrong password re-shows the form, so this times out instead of passing.
+  await page.locator(LOGIN.email).waitFor({ state: 'detached' });
+  await page.waitForLoadState('networkidle');
 }
 
 async function download({ email, password, rawDir, failuresDir }) {
@@ -53,7 +55,7 @@ async function download({ email, password, rawDir, failuresDir }) {
       await step(page, failuresDir, 'login failed', async () => {
         await login(page, email, password);
         await page.goto(REPORT_URL);
-        if (await onLoginPage(page)) throw new Error('the login page came back after signing in');
+        if (await onLoginPage(page)) throw new Error(`the login page came back after signing in (${page.url()})`);
       });
       log('logged in');
     }
