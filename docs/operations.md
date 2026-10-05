@@ -12,7 +12,7 @@ Desktop. The project lives at `/home/it/LegoDocker` inside the distro, on the Li
 Do not move it to `/mnt/c`: bind mounts across the Windows boundary are slow and break file
 permissions for Postgres.
 
-Five things about running this on a laptop.
+Six things about running this on a laptop.
 
 **1. WSL shuts the whole VM down when no session holds it open.** Docker and every container
 die with it. The symptom is deceptive — containers show `Up 3 seconds` with `RestartCount=0`,
@@ -53,6 +53,18 @@ about 2 GB below that value and `MB_MEM_LIMIT` about 1 GB above `MB_JAVA_XMX`.
 **5. The data lives in one file.** Every named volume sits inside the WSL2 `ext4.vhdx` image. A
 corrupt image loses Metabase's whole metadata store in one step, so the offsite backup matters
 more here than it would on a VM.
+
+**6. Cap container logs.** Every lego sets `logging: driver: local` (5 files × 20 MB,
+compressed, per container). A container started outside the compose files uses the daemon
+default, `json-file`, which has no limit. One-time host step:
+
+```bash
+echo '{"log-driver": "local"}' | sudo tee /etc/docker/daemon.json
+sudo systemctl restart docker
+```
+
+If `/etc/docker/daemon.json` already has content, add the key instead of overwriting the file.
+Existing containers keep their old driver until they are recreated.
 
 Two smaller notes:
 
@@ -101,13 +113,14 @@ ssh -L 9000:localhost:9000 <user>@<host>    # then browse http://localhost:9000
 
 ## Secrets
 
-Two files hold everything: the root `.env` and `metabase/.env`, both mode 600.
+Three files hold everything: the root `.env`, `metabase/.env`, and `dicks-sync/.env`, all
+mode 600.
 
-They also live **outside the workspace** at `/home/it/legodocker-secrets/` as `root.env` and
-`metabase.env`. This is not redundancy — `actions/checkout` runs `git clean -ffdx` on every CI
+They also live **outside the workspace** at `/home/it/legodocker-secrets/` as `root.env`,
+`metabase.env`, and `dicks-sync.env`. This is not redundancy — `actions/checkout` runs `git clean -ffdx` on every CI
 job, which deletes untracked files, and the `.env` files are git-ignored. Kept only in the
 workspace they would be wiped on the first deploy. The workflow copies them back in each run.
-Keep the two copies in step when you change either.
+Keep the copies in step when you change one.
 
 > **`MB_ENCRYPTION_SECRET_KEY` is unrecoverable if lost.** It encrypts data-source credentials
 > inside the app DB. The nightly dump does **not** contain it, so a restore without the key
@@ -141,6 +154,48 @@ docker compose logs metabase-backup | grep ERROR
 
 Test-restore a dump into a scratch database from time to time. An untested backup is not a
 backup.
+
+---
+
+## Dick's sync
+
+`dicks-sync` downloads Dick's Item Performance report from the SPS Commerce portal at 06:00
+Mountain each day (`SYNC_CRON`, `TZ` in `dicks-sync/.env`) and loads `ext.DicksSellThrough` in
+Spirit Web DB. Dick's posts a week (ending Saturday) on Sunday evening, so Monday's run brings it
+in; the later daily runs retry a failed Monday on their own. Design:
+`docs/specs/2026-10-05-dicks-sell-through-design.md`.
+
+Test the download without writing to the database:
+
+```bash
+docker exec dicks-sync dicks-sync once --dry-run
+```
+
+**A failed run writes nothing.** Find failures in the logs:
+
+```bash
+docker logs dicks-sync 2>&1 | grep ERROR
+```
+
+- `ERROR: login failed` — the shared portal password changed. Update `SPS_PASSWORD` in
+  `/home/it/legodocker-secrets/dicks-sync.env`, then redeploy (Actions → Run workflow).
+- `ERROR: <step>` with a screenshot path — the portal page changed. Copy the screenshot out with
+  `docker cp dicks-sync:/data/failures/<file>.png .` and fix the selector in
+  `dicks-sync/src/portal.js`.
+- `ERROR: ... (raw file kept: ...)` — the file did not pass the checks. The raw download stays in
+  `/data/raw/`.
+
+Load a saved file by hand (one that has no date line needs `--week-ending`, a Saturday):
+
+```bash
+docker cp dicks-sync/test/fixtures/2026-09-26.csv dicks-sync:/data/raw/2026-09-26.csv
+docker exec dicks-sync dicks-sync load-file /data/raw/2026-09-26.csv --week-ending 2026-09-26
+```
+
+Only one run happens at a time. A manual run while the 06:00 run is still going logs
+`ERROR: another run is still going` and does nothing.
+
+Raw files and screenshots older than 730 days are deleted at the start of each run.
 
 ---
 
