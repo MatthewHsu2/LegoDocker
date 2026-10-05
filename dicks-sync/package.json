@@ -1,0 +1,12 @@
+{
+  "name": "dicks-sync",
+  "private": true,
+  "description": "Downloads Dick's Item Performance from SPS Commerce and loads ext.DicksSellThrough.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "mssql": "12.7.4",
+    "playwright": "1.63.0"
+  }
+}

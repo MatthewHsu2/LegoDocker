@@ -9,3 +9,6 @@ Caddyfile     text eol=lf
 *.yaml        text eol=lf
 *.yml         text eol=lf
 .env.example  text eol=lf
+
+# Real portal downloads: UTF-16 LE with CRLF. Any line-ending change corrupts them.
+*.csv         binary

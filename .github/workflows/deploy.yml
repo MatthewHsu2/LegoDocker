@@ -55,6 +55,7 @@ jobs:
           fi
           cp "$SECRETS_DIR/root.env"     .env
           cp "$SECRETS_DIR/metabase.env" metabase/.env
+          cp "$SECRETS_DIR/dicks-sync.env" dicks-sync/.env
 
       - name: Validate the Compose config
         # Runs before anything touches the running stack. A typo or an unset variable fails
@@ -62,8 +63,8 @@ jobs:
         run: docker compose $COMPOSE_ARGS config --quiet
 
       - name: Apply
-        # --build          the metabase-backup image is built locally; without this a change
-        #                  to backup.sh or its Dockerfile is never picked up.
+        # --build          the metabase-backup and dicks-sync images are built locally; without
+        #                  this a change to their scripts or Dockerfiles is never picked up.
         # --remove-orphans deletes containers for legos removed from the include list.
         run: docker compose $COMPOSE_ARGS up -d --build --remove-orphans
 

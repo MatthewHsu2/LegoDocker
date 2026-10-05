@@ -5,3 +5,6 @@
 cloudflared/creds/*
 !cloudflared/creds/.gitkeep
 **/*.creds.json
+
+docs/
+node_modules/

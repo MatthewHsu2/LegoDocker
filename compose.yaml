@@ -12,6 +12,7 @@ include:
   - metabase/compose.yaml
   - portainer/compose.yaml
   - caddy/compose.yaml
+  - dicks-sync/compose.yaml
 
 networks:
   # Shared flat network every lego joins so services reach each other by container name.
