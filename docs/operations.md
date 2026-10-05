@@ -160,7 +160,7 @@ backup.
 ## Dick's sync
 
 `dicks-sync` downloads Dick's Item Performance report from the SPS Commerce portal at 06:00
-Mountain each day (`SYNC_CRON`, `TZ` in `dicks-sync/.env`) and loads `ext.DicksSellThrough` in
+Mountain each day (`SYNC_CRON`, `DICKS_SYNC_TZ` in `dicks-sync/.env`) and loads `ext.DicksSellThrough` in
 Spirit Web DB. Dick's posts a week (ending Saturday) on Sunday evening, so Monday's run brings it
 in; the later daily runs retry a failed Monday on their own. Design:
 `docs/specs/2026-10-05-dicks-sell-through-design.md`.

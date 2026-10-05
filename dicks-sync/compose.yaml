@@ -17,7 +17,8 @@ services:
       SQL_USER: ${SQL_USER}
       SQL_PASSWORD: ${SQL_PASSWORD}
       SYNC_CRON: ${SYNC_CRON:-0 6 * * *}
-      TZ: ${TZ}
+      # Not ${TZ}: the root .env sets TZ for the whole stack and would win over this lego's .env.
+      TZ: ${DICKS_SYNC_TZ:-America/Denver}
     volumes:
       - dicks-sync-data:/data
     networks:
