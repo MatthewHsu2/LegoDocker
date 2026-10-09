@@ -1,0 +1,46 @@
+Category,Meaning
+Noise: motor,Noise from the drive motor or a gear motor.
+Noise: rollers,Noise from the front or rear roller.
+Noise: drive belt,Noise from the drive belt or the walking belt.
+Noise: flywheel,Noise from the flywheel.
+Noise: pedals,Noise from the pedals or pedal arms.
+Noise: location unknown,"A noise, squeak, click or knock, and the note does not say which part makes it."
+LS error (low speed),"LS, LS1, LSE or low speed error, with or without belt movement."
+Error code only,"The note gives an error code (E2, E5, E50H ...) and no symptom or failed part beyond it. Words like 'motor error' or 'error message' alone do not count as a symptom."
+Incline not working,"Incline or ramp does not move, incline error, elevation error, or incline calibration fails."
+Resistance not working,"Resistance does not change, is too high, too low, or reversed."
+No power,The unit or the console does not turn on.
+Shuts down during workout,The unit stops or turns off by itself while in use.
+Trips breaker,The unit trips the house breaker or blows a fuse.
+Burning smell,"Burning or electrical smell, smoke."
+Burnt motor wires or controller,Motor wires or the controller board are burnt or charred.
+Cables or power cord damaged,"Damaged, cut, pinched or melted cables, harness or power cord."
+Console or display not working,"Console or display freezes, flickers, shows partial digits, wrong data, software problem."
+Buttons or fan not working,"Console buttons, hand switches or the fan do not respond."
+Speed changes on its own,"Belt speeds up, slows down, surges or hesitates by itself."
+Speed sensor or speed switch not working,"No speed reading, speed sensor or speed switch fault."
+Drive motor failed,"Drive motor does not move, failed the battery test, is weak or must be replaced."
+Controller failed,The motor controller board (MCB) is bad or must be replaced.
+Walking belt worn or slipping,"Walking or running belt is worn, torn, fraying, slipping or not moving."
+Deck cracked or worn,"Running deck is cracked, worn, grooved or blistered."
+Drive belt worn or broken,"Drive belt is worn, broken, shredded or came off."
+Roller bearings bad,Front or rear roller or its bearings are bad (without a noise complaint).
+Heart rate not reading,"Hand pulse grips, heart rate monitor or chest strap do not work."
+Safety key missing or broken,"Safety key missing, broken, or the unit says to insert the key."
+Jumping track,Elliptical wheel jumps or comes off the track.
+"Frame, weld or arm broken","Broken weld, frame, connecting arm, crank or stripped bolts in the structure."
+"Tracks, rails or slide wheels damaged","Elliptical aluminum rails, tracks or slide wheels are cracked or damaged."
+Pedal broken or loose,"Pedal, pedal arm, pedal strap or toe cage is broken, loose or needs replacing."
+Handlebar broken,"Handlebar or release lever is broken or loose."
+Seat broken or will not lock,"Seat is broken, damaged, or does not slide or lock."
+Folding or adjustment mechanism stuck,"Unit is stuck folded or raised, will not retract or lock in storage position, gas cylinder or brake mechanism problem."
+Console damaged,"Console housing or screen is cracked, scratched or broken (physical damage)."
+Covers or end caps damaged,"Plastic covers, motor hood, end caps or shrouds are cracked or broken."
+"Damaged part, not named","Something arrived or became damaged, but the note does not say which part."
+Missing parts,"Hardware, lube, tools, chest strap or numbered parts missing from the box."
+Wrong part sent,We sent the wrong part or the wrong side.
+Parts not received,"Parts never arrived, were lost, or did not ship."
+Unit replaced or credited,The whole machine is replaced or returned (RA) or the dealer gets credit.
+Parts order only,The note only says which parts were ordered or are needed. It states no problem.
+Tech visit requested,The note only asks for a technician to visit or install parts. It states no problem.
+No issue text,"The note is empty or has no real content, for example 'data lost from May 11 to July 17, 2020'."
