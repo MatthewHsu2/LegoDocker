@@ -1,0 +1,81 @@
+Cluster,Category,Note
+51,Noise: motor,motor
+36,Noise: motor,drive motor
+61,Noise: rollers,
+30,Noise: drive belt,drive belt / walking belt
+21,Noise: flywheel,
+59,Noise: pedals,
+53,Noise: location unknown,general noise
+7,Noise: location unknown,noise from front or rear of unit
+62,Noise: location unknown,squeaking
+24,LS error (low speed),with or without belt movement
+3,LS error (low speed),LS / LS1 with motor detail
+12,Error code only,"E2, E4, E6, E7"
+55,Error code only,mostly E5
+77,Error code only,E2 motor error (ellipticals)
+44,Incline not working,incline motor / switch
+20,Incline not working,incline or elevation error / calibration
+41,Resistance not working,resistance not working
+31,Resistance not working,"too high, too low, reversed"
+39,No power,no power to console
+1,No power,no power to unit / switch
+69,Shuts down during workout,
+45,Trips breaker,also blows fuse
+73,Burning smell,
+23,Burnt motor wires or controller,
+5,Cables or power cord damaged,
+16,Console or display not working,console not working
+79,Console or display not working,display / software
+8,Buttons or fan not working,no button response
+29,Buttons or fan not working,fan and buttons
+65,Speed changes on its own,speeds up or slows down on its own
+50,Speed sensor or speed switch not working,no speed reading
+4,Drive motor failed,
+49,Drive motor failed,failed battery test (often E4)
+47,Drive motor failed,motor requested / motor wires
+11,Controller failed,
+58,Controller failed,"""needs controller""; also 586 x ""unit to be RA'd"""
+6,Walking belt worn or slipping,
+75,Walking belt worn or slipping,belt damaged / coming apart
+37,Walking belt worn or slipping,running belt worn
+33,Walking belt worn or slipping,belt and deck worn together
+48,Deck cracked or worn,cracked
+40,Deck cracked or worn,worn / grooved
+64,Drive belt worn or broken,
+46,Roller bearings bad,
+38,Heart rate not reading,hand pulse grips
+78,Heart rate not reading,heart rate monitor
+74,Heart rate not reading,chest strap
+56,Safety key missing or broken,
+15,Jumping track,
+17,"Frame, weld or arm broken",connecting arm / weld / frame
+60,"Tracks, rails or slide wheels damaged",aluminum rails cracked
+9,"Tracks, rails or slide wheels damaged",slide wheels
+32,Pedal broken or loose,pedal broken
+27,Pedal broken or loose,pedal replacement
+52,Handlebar broken,
+14,Seat broken or will not lock,
+68,Folding or adjustment mechanism stuck,"stuck raised, will not retract, pinched harness"
+13,Console damaged,mostly out of box
+22,Covers or end caps damaged,end caps
+67,Covers or end caps damaged,motor hood cover
+26,"Damaged part, not named",
+57,"Damaged part, not named",out of box
+70,"Damaged part, not named","assembly, out of box"
+71,Missing parts,hardware kit
+10,Missing parts,missing out of box
+0,Missing parts,lube
+25,Missing parts,"part numbers; also ""partial digits"""
+18,Wrong part sent,
+76,Parts not received,
+2,Unit replaced or credited,
+54,Unit replaced or credited,about half are dealer parts requests
+34,Parts order only,"""order for X"""
+43,Parts order only,order for belt / deck
+19,Parts order only,"""needs parts"""
+28,Parts order only,order for console / needs console
+66,Parts order only,"""emailed order-defective"""
+72,Parts order only,"""faxed order-defective"""
+63,Tech visit requested,
+42,No issue text,"""data lost from May 11 to July 17, 2020"""
+35,No issue text,empty after cleaning
